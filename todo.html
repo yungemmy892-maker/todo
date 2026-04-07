@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Todo Card — Frontend Wizards Stage 0</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="page-wrapper">
+  <p class="page-label">Task Card</p>
+
+  <article data-testid="test-todo-card" id="todo-card">
+
+    <div class="card-header">
+      <div class="checkbox-wrapper">
+        <label for="todo-toggle" class="sr-only" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);">Mark task as complete</label>
+        <input
+          type="checkbox"
+          id="todo-toggle"
+          data-testid="test-todo-complete-toggle"
+          aria-label="Mark task as complete"
+          onchange="handleToggle(this)"
+        />
+      </div>
+
+      <div class="title-group">
+        <h2 data-testid="test-todo-title" id="todo-title">Redesign onboarding flow for mobile users</h2>
+        <div class="badges-row">
+          <span
+            class="badge priority-high"
+            data-testid="test-todo-priority"
+            aria-label="Priority: High"
+          >High</span>
+          <span
+            class="badge status-in-progress"
+            data-testid="test-todo-status"
+            id="status-badge"
+            aria-label="Status: In Progress"
+          >In Progress</span>
+        </div>
+      </div>
+    </div>
+
+    <p data-testid="test-todo-description" id="todo-description">
+      Audit the current onboarding screens, identify friction points from user research, and deliver updated wireframes with improved copy and progressive disclosure patterns.
+    </p>
+
+    <div class="date-row">
+      <div class="date-item">
+        <svg class="date-icon" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <rect x="1.5" y="2.5" width="13" height="12" rx="2" stroke="currentColor" stroke-width="1.25"/>
+          <path d="M5 1v3M11 1v3M1.5 6.5h13" stroke="currentColor" stroke-width="1.25" stroke-linecap="round"/>
+        </svg>
+        <time data-testid="test-todo-due-date" id="due-date-text" datetime="2026-04-18T18:00:00Z">
+          Due Apr 18, 2026
+        </time>
+      </div>
+      <div class="date-item">
+        <svg class="date-icon" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <circle cx="8" cy="8" r="6.25" stroke="currentColor" stroke-width="1.25"/>
+          <path d="M8 4.5V8l2.5 2" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <span
+          data-testid="test-todo-time-remaining"
+          id="time-remaining"
+          aria-live="polite"
+          aria-label="Time remaining"
+          class="due-later"
+        ></span>
+      </div>
+    </div>
+
+    <ul data-testid="test-todo-tags" role="list" aria-label="Tags">
+      <li data-testid="test-todo-tag-work">work</li>
+      <li data-testid="test-todo-tag-urgent">urgent</li>
+      <li>design</li>
+      <li>mobile</li>
+    </ul>
+
+    <div class="card-footer">
+      <button
+        data-testid="test-todo-edit-button"
+        class="action-btn"
+        id="edit-btn"
+        aria-label="Edit task"
+        onclick="handleEdit()"
+      >
+        <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <path d="M11 2.5l2.5 2.5-8 8H3V10.5l8-8z" stroke="currentColor" stroke-width="1.25" stroke-linejoin="round"/>
+          <path d="M9.5 4l2 2" stroke="currentColor" stroke-width="1.25" stroke-linecap="round"/>
+        </svg>
+        Edit
+      </button>
+      <button
+        data-testid="test-todo-delete-button"
+        class="action-btn delete"
+        aria-label="Delete task"
+        onclick="alert('Delete clicked')"
+      >
+        <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <path d="M2.5 4.5h11M6 4.5V3h4v1.5M6.5 7v5M9.5 7v5M3.5 4.5l.75 8.5a1 1 0 001 .75h5.5a1 1 0 001-.75l.75-8.5" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Delete
+      </button>
+    </div>
+
+  </article>
+</div>
+
+<script src="script.js" defer></script>
+</body>
+</html>

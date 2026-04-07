@@ -1,0 +1,429 @@
+ *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #f5f2ec;
+    --card-bg: #fffef9;
+    --card-border: #e2ddd3;
+    --text-primary: #1a1916;
+    --text-secondary: #6b6760;
+    --text-muted: #9e9b96;
+    --accent: #c8502a;
+    --accent-light: #fdf0ec;
+    --accent-border: #f0c4b4;
+    --green: #2d6a4f;
+    --green-light: #eef7f2;
+    --amber: #92500a;
+    --amber-light: #fef6e8;
+    --blue: #1a4f7a;
+    --blue-light: #ebf3fb;
+    --serif: 'DM Serif Display', Georgia, serif;
+    --sans: 'DM Sans', system-ui, sans-serif;
+    --radius: 16px;
+    --radius-sm: 8px;
+    --shadow: 0 2px 12px rgba(30,26,20,0.08), 0 1px 3px rgba(30,26,20,0.06);
+    --shadow-hover: 0 8px 28px rgba(30,26,20,0.13), 0 2px 8px rgba(30,26,20,0.08);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1a1916;
+      --card-bg: #232119;
+      --card-border: #3a3730;
+      --text-primary: #f0ece4;
+      --text-secondary: #a09c94;
+      --text-muted: #706d67;
+      --accent: #e8714e;
+      --accent-light: #2d1f18;
+      --accent-border: #5a2e1e;
+      --green: #6abf91;
+      --green-light: #152519;
+      --amber: #e8a040;
+      --amber-light: #261b0e;
+      --blue: #6aaee8;
+      --blue-light: #0f1e2d;
+    }
+  }
+
+  body {
+    font-family: var(--sans);
+    background: var(--bg);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem 1rem;
+    color: var(--text-primary);
+  }
+
+  .page-wrapper {
+    width: 100%;
+    max-width: 480px;
+  }
+
+  .page-label {
+    font-family: var(--serif);
+    font-size: 13px;
+    letter-spacing: 0.06em;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    margin-bottom: 1.25rem;
+    padding-left: 2px;
+  }
+
+  /* ── Card ── */
+  article[data-testid="test-todo-card"] {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: var(--radius);
+    padding: 1.5rem 1.5rem 1.25rem;
+    box-shadow: var(--shadow);
+    transition: box-shadow 0.25s ease, transform 0.25s ease;
+    position: relative;
+    overflow: hidden;
+  }
+
+  article[data-testid="test-todo-card"]:hover {
+    box-shadow: var(--shadow-hover);
+    transform: translateY(-1px);
+  }
+
+  article[data-testid="test-todo-card"].completed {
+    opacity: 0.72;
+  }
+
+  /* accent stripe */
+  article[data-testid="test-todo-card"]::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: var(--accent);
+    border-radius: var(--radius) var(--radius) 0 0;
+    transition: background 0.3s;
+  }
+
+  article[data-testid="test-todo-card"].completed::before {
+    background: var(--green);
+  }
+
+  /* ── Header row ── */
+  .card-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 0.875rem;
+  }
+
+  /* Checkbox */
+  .checkbox-wrapper {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    margin-top: 3px;
+  }
+
+  input[type="checkbox"][data-testid="test-todo-complete-toggle"] {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 20px;
+    height: 20px;
+    border: 2px solid var(--card-border);
+    border-radius: 6px;
+    cursor: pointer;
+    background: transparent;
+    display: grid;
+    place-content: center;
+    transition: border-color 0.2s, background 0.2s;
+    flex-shrink: 0;
+  }
+
+  input[type="checkbox"][data-testid="test-todo-complete-toggle"]:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  input[type="checkbox"][data-testid="test-todo-complete-toggle"]:hover {
+    border-color: var(--accent);
+  }
+
+  input[type="checkbox"][data-testid="test-todo-complete-toggle"]::after {
+    content: '';
+    width: 10px;
+    height: 6px;
+    border-left: 2px solid #fff;
+    border-bottom: 2px solid #fff;
+    transform: rotate(-45deg) scale(0) translateY(-1px);
+    transition: transform 0.15s ease;
+  }
+
+  input[type="checkbox"][data-testid="test-todo-complete-toggle"]:checked {
+    background: var(--green);
+    border-color: var(--green);
+  }
+
+  input[type="checkbox"][data-testid="test-todo-complete-toggle"]:checked::after {
+    transform: rotate(-45deg) scale(1) translateY(-1px);
+  }
+
+  .title-group { flex: 1; min-width: 0; }
+
+  h2[data-testid="test-todo-title"] {
+    font-family: var(--serif);
+    font-size: 1.2rem;
+    font-weight: 400;
+    line-height: 1.35;
+    color: var(--text-primary);
+    transition: color 0.2s;
+    word-break: break-word;
+    border-radius: var(--radius-sm);
+    padding: 4px;
+    margin: -4px;
+  }
+
+  h2[data-testid="test-todo-title"]:focus {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  .completed h2[data-testid="test-todo-title"] {
+    text-decoration: line-through;
+    color: var(--text-muted);
+  }
+
+  /* ── Badges row ── */
+  .badges-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 6px;
+    flex-wrap: wrap;
+  }
+
+  .badge {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    padding: 3px 9px;
+    border-radius: 20px;
+    text-transform: uppercase;
+    line-height: 1.4;
+  }
+
+  [data-testid="test-todo-priority"].priority-high {
+    background: var(--accent-light);
+    color: var(--accent);
+    border: 1px solid var(--accent-border);
+  }
+
+  [data-testid="test-todo-priority"].priority-medium {
+    background: var(--amber-light);
+    color: var(--amber);
+    border: 1px solid color-mix(in srgb, var(--amber) 25%, transparent);
+  }
+
+  [data-testid="test-todo-priority"].priority-low {
+    background: var(--blue-light);
+    color: var(--blue);
+    border: 1px solid color-mix(in srgb, var(--blue) 20%, transparent);
+  }
+
+  [data-testid="test-todo-status"] {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.03em;
+    padding: 3px 9px;
+    border-radius: 20px;
+    border: 1px solid var(--card-border);
+    color: var(--text-secondary);
+    background: transparent;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    text-transform: capitalize;
+  }
+
+  [data-testid="test-todo-status"]::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+    flex-shrink: 0;
+    opacity: 0.7;
+  }
+
+  [data-testid="test-todo-status"].status-done {
+    color: var(--green);
+    border-color: color-mix(in srgb, var(--green) 30%, transparent);
+    background: var(--green-light);
+  }
+
+  [data-testid="test-todo-status"].status-in-progress {
+    color: var(--amber);
+    border-color: color-mix(in srgb, var(--amber) 25%, transparent);
+    background: var(--amber-light);
+  }
+
+  /* ── Description ── */
+  p[data-testid="test-todo-description"] {
+    font-size: 0.875rem;
+    line-height: 1.65;
+    color: var(--text-secondary);
+    margin: 0.875rem 0;
+    padding: 0.75rem 1rem;
+    background: var(--bg);
+    border-radius: var(--radius-sm);
+    border-left: 3px solid var(--card-border);
+    word-break: break-word;
+    transition: border-color 0.3s;
+    border-radius: var(--radius-sm);
+  }
+
+  p[data-testid="test-todo-description"]:focus {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  .completed p[data-testid="test-todo-description"] {
+    border-left-color: var(--green);
+  }
+
+  /* ── Due date / time ── */
+  .date-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 0.875rem;
+    flex-wrap: wrap;
+  }
+
+  .date-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.8125rem;
+    color: var(--text-secondary);
+  }
+
+  .date-icon {
+    width: 14px;
+    height: 14px;
+    opacity: 0.55;
+    flex-shrink: 0;
+  }
+
+  time[data-testid="test-todo-due-date"] {
+    font-weight: 500;
+    color: var(--text-primary);
+  }
+
+  [data-testid="test-todo-time-remaining"] {
+    font-size: 0.8125rem;
+    font-weight: 500;
+    padding: 3px 10px;
+    border-radius: 6px;
+    transition: background 0.3s, color 0.3s;
+  }
+
+  [data-testid="test-todo-time-remaining"].overdue {
+    background: var(--accent-light);
+    color: var(--accent);
+  }
+
+  [data-testid="test-todo-time-remaining"].due-soon {
+    background: var(--amber-light);
+    color: var(--amber);
+  }
+
+  [data-testid="test-todo-time-remaining"].due-later {
+    background: var(--green-light);
+    color: var(--green);
+  }
+
+  /* ── Tags ── */
+  ul[data-testid="test-todo-tags"] {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+    margin-bottom: 1rem;
+  }
+
+  ul[data-testid="test-todo-tags"] li {
+    font-size: 0.75rem;
+    font-weight: 500;
+    padding: 4px 11px;
+    border-radius: 20px;
+    background: var(--bg);
+    border: 1px solid var(--card-border);
+    color: var(--text-secondary);
+    letter-spacing: 0.02em;
+    transition: border-color 0.15s, color 0.15s;
+  }
+
+  ul[data-testid="test-todo-tags"] li:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  /* ── Actions ── */
+  .card-footer {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+    padding-top: 0.875rem;
+    border-top: 1px solid var(--card-border);
+  }
+
+  .action-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--sans);
+    font-size: 0.8125rem;
+    font-weight: 500;
+    padding: 6px 14px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--card-border);
+    background: transparent;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.15s ease;
+    text-decoration: none;
+  }
+
+  .action-btn:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: var(--accent-light);
+  }
+
+  .action-btn:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  .action-btn:active {
+    transform: scale(0.97);
+  }
+
+  .action-btn.delete:hover {
+    border-color: #c0392b;
+    color: #c0392b;
+    background: #fdf2f2;
+  }
+
+  .action-btn svg {
+    width: 13px;
+    height: 13px;
+    flex-shrink: 0;
+  }
+
+  /* ── Responsive ── */
+  @media (max-width: 480px) {
+    body { padding: 1rem 0.75rem; align-items: flex-start; }
+    .page-wrapper { max-width: 100%; }
+    article[data-testid="test-todo-card"] { padding: 1.25rem 1.125rem 1rem; }
+    h2[data-testid="test-todo-title"] { font-size: 1.1rem; }
+  }
