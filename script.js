@@ -200,30 +200,8 @@ statusSelect.addEventListener('change', () => {
   applyStatus(statusSelect.value);
 });
  
-// ─── Delete ───────────────────────────────────────────────
-function deleteTodo() {
-  if (confirm('Are you sure you want to permanently delete this task?')) {
-    // Save deletion to localStorage
-    localStorage.setItem('todoDeleted', 'true');
-    // Remove card from DOM with fade-out animation
-    card.style.opacity = '0';
-    card.style.transition = 'opacity 0.3s ease';
-    setTimeout(() => {
-      card.style.display = 'none';
-      // Alert user that task was deleted
-      alert('Task deleted permanently');
-    }, 300);
-  }
-}
-
 // ─── Init ─────────────────────────────────────────────────
 (function init() {
-  // Check if todo was previously deleted
-  if (localStorage.getItem('todoDeleted') === 'true') {
-    card.style.display = 'none';
-    return;
-  }
-  
   renderDesc();
   applyPriority(state.priority);
   applyStatus(state.status);
