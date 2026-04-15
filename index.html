@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Todo Card — Stage 1a</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<div class="page">
+  <p class="eyebrow">Task — Stage 1a</p>
+
+  <article data-testid="test-todo-card" id="todo-card" class="priority-high">
+
+    <div data-testid="test-todo-priority-indicator" aria-hidden="true"></div>
+
+    <!-- VIEW MODE -->
+    <div class="card-inner" id="view-mode">
+
+      <div class="card-head">
+        <div class="cb-wrap">
+          <label for="todo-cb" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)">Mark complete</label>
+          <input type="checkbox" id="todo-cb" data-testid="test-todo-complete-toggle" aria-label="Mark task as complete" />
+        </div>
+
+        <div class="title-stack">
+          <h2 data-testid="test-todo-title" id="todo-title">Redesign onboarding flow for mobile users</h2>
+          <div class="badges">
+            <span data-testid="test-todo-priority" id="priority-badge" class="badge priority-high" aria-label="Priority: High">High</span>
+            <span data-testid="test-todo-status"   id="status-badge"   class="s-in-progress" aria-label="Status: In Progress">In Progress</span>
+            <span data-testid="test-todo-overdue-indicator" id="overdue-badge" aria-live="assertive">Overdue</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Description (short shown inline; long in collapsible) -->
+      <div class="desc-wrap" id="desc-wrap">
+        <!-- filled by JS -->
+      </div>
+
+      <!-- Meta row -->
+      <div class="meta-row">
+        <div class="meta-item">
+          <svg class="meta-icon" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+            <rect x="1.5" y="2.5" width="13" height="12" rx="2" stroke="currentColor" stroke-width="1.25"/>
+            <path d="M5 1v3M11 1v3M1.5 6.5h13" stroke="currentColor" stroke-width="1.25" stroke-linecap="round"/>
+          </svg>
+          <time data-testid="test-todo-due-date" id="due-date-el" datetime="">—</time>
+        </div>
+        <span data-testid="test-todo-time-remaining" id="time-remaining" aria-live="polite" class="tr-later"></span>
+      </div>
+
+      <!-- Status control -->
+      <div class="status-control-wrap">
+        <label class="ctrl-label" for="status-select">Status</label>
+        <select data-testid="test-todo-status-control" id="status-select" aria-label="Change task status">
+          <option value="Pending">Pending</option>
+          <option value="In Progress" selected>In Progress</option>
+          <option value="Done">Done</option>
+        </select>
+      </div>
+
+      <!-- Tags -->
+      <ul data-testid="test-todo-tags" role="list" aria-label="Tags">
+        <li data-testid="test-todo-tag-work">work</li>
+        <li data-testid="test-todo-tag-urgent">urgent</li>
+        <li>design</li>
+        <li>mobile</li>
+      </ul>
+
+      <!-- Footer actions -->
+      <div class="card-foot">
+        <button data-testid="test-todo-edit-button" class="btn" id="edit-btn" aria-label="Edit task" onclick="openEdit()">
+          <svg viewBox="0 0 16 16" fill="none" aria-hidden="true">
+            <path d="M11 2.5l2.5 2.5-8 8H3V10.5l8-8z" stroke="currentColor" stroke-width="1.25" stroke-linejoin="round"/>
+            <path d="M9.5 4l2 2" stroke="currentColor" stroke-width="1.25" stroke-linecap="round"/>
+          </svg>
+          Edit
+        </button>
+        <button data-testid="test-todo-delete-button" class="btn btn-delete" aria-label="Delete task" onclick="deleteTodo()">
+          <svg viewBox="0 0 16 16" fill="none" aria-hidden="true">
+            <path d="M2.5 4.5h11M6 4.5V3h4v1.5M6.5 7v5M9.5 7v5M3.5 4.5l.75 8.5a1 1 0 001 .75h5.5a1 1 0 001-.75l.75-8.5" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          Delete
+        </button>
+      </div>
+    </div>
+
+    <!-- EDIT MODE FORM -->
+    <form data-testid="test-todo-edit-form" id="edit-form" aria-label="Edit task" onsubmit="return false;">
+
+      <div class="form-field">
+        <label for="edit-title">Title</label>
+        <input data-testid="test-todo-edit-title-input" id="edit-title" type="text" autocomplete="off" />
+      </div>
+
+      <div class="form-field">
+        <label for="edit-desc">Description</label>
+        <textarea data-testid="test-todo-edit-description-input" id="edit-desc"></textarea>
+      </div>
+
+      <div class="form-row">
+        <div class="form-field">
+          <label for="edit-priority">Priority</label>
+          <select data-testid="test-todo-edit-priority-select" id="edit-priority">
+            <option value="Low">Low</option>
+            <option value="Medium">Medium</option>
+            <option value="High" selected>High</option>
+          </select>
+        </div>
+        <div class="form-field">
+          <label for="edit-due">Due Date</label>
+          <input data-testid="test-todo-edit-due-date-input" id="edit-due" type="datetime-local" />
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <button data-testid="test-todo-cancel-button" type="button" class="btn" onclick="closeEdit(false)" aria-label="Cancel editing">Cancel</button>
+        <button data-testid="test-todo-save-button"   type="button" class="btn btn-save" onclick="closeEdit(true)" aria-label="Save changes">Save</button>
+      </div>
+
+    </form>
+
+  </article>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>

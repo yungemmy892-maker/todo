@@ -1,147 +1,234 @@
- const DUE_DATE = new Date('2026-04-18T18:00:00Z');
-
-  let isEditing = false;
-  let originalTitle = '';
-  let originalDescription = '';
-
-  function handleEdit() {
-    const titleEl = document.getElementById('todo-title');
-    const descEl = document.getElementById('todo-description');
-    const editBtn = document.getElementById('edit-btn');
-
-    if (!isEditing) {
-      // Enter edit mode
-      isEditing = true;
-      originalTitle = titleEl.textContent;
-      originalDescription = descEl.textContent;
-
-      titleEl.contentEditable = true;
-      descEl.contentEditable = true;
-
-      titleEl.style.border = '1px solid var(--accent)';
-      descEl.style.border = '1px solid var(--accent)';
-
-      editBtn.innerHTML = `
-        <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-          <path d="M2.5 8l3.5 3.5L13.5 4" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-        Save
-      `;
-      editBtn.setAttribute('aria-label', 'Save changes');
-
-      // Add cancel button
-      const cancelBtn = document.createElement('button');
-      cancelBtn.className = 'action-btn';
-      cancelBtn.innerHTML = `
-        <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-          <path d="M12 4L4 12M4 4l8 8" stroke="currentColor" stroke-width="1.25" stroke-linecap="round"/>
-        </svg>
-        Cancel
-      `;
-      cancelBtn.setAttribute('aria-label', 'Cancel editing');
-      cancelBtn.onclick = handleCancelEdit;
-      editBtn.parentNode.insertBefore(cancelBtn, editBtn.nextSibling);
-
-    } else {
-      // Save changes
-      saveEdit();
+// ─── State ───────────────────────────────────────────────
+const state = {
+  title: 'Redesign onboarding flow for mobile users',
+  description: 'Audit the current onboarding screens and identify friction points from user research sessions conducted in Q1. Deliver updated wireframes with improved copy, progressive disclosure patterns, and a streamlined 3-step flow that reduces drop-off. Coordinate with the copy team and get sign-off from product leadership before handoff to engineering.',
+  priority: 'High',
+  status: 'In Progress',
+  dueDate: new Date('2026-04-18T18:00:00Z'),
+  // snapshot for cancel
+  _snap: null
+};
+ 
+const COLLAPSE_THRESHOLD = 120; // chars before collapsing
+ 
+// ─── DOM refs ────────────────────────────────────────────
+const card          = document.getElementById('todo-card');
+const viewMode      = document.getElementById('view-mode');
+const editForm      = document.getElementById('edit-form');
+const titleEl       = document.getElementById('todo-title');
+const priorityBadge = document.getElementById('priority-badge');
+const statusBadge   = document.getElementById('status-badge');
+const overdueBadge  = document.getElementById('overdue-badge');
+const dueDateEl     = document.getElementById('due-date-el');
+const timeRemEl     = document.getElementById('time-remaining');
+const statusSelect  = document.getElementById('status-select');
+const checkbox      = document.querySelector('[data-testid="test-todo-complete-toggle"]');
+const descWrap      = document.getElementById('desc-wrap');
+const editBtn       = document.getElementById('edit-btn');
+ 
+// ─── Render description ───────────────────────────────────
+function renderDesc() {
+  const desc = state.description;
+  const isLong = desc.length > COLLAPSE_THRESHOLD;
+ 
+  if (!isLong) {
+    descWrap.innerHTML = `<p data-testid="test-todo-description">${esc(desc)}</p>`;
+    return;
+  }
+ 
+  const preview = desc.slice(0, COLLAPSE_THRESHOLD).trimEnd() + '…';
+  descWrap.innerHTML = `
+    <div class="desc-preview" id="desc-preview">${esc(preview)}</div>
+    <div data-testid="test-todo-collapsible-section"
+         id="collapsible"
+         role="region"
+         aria-labelledby="expand-toggle">
+      <p data-testid="test-todo-description"
+         style="border-radius:0;border-left:3px solid var(--card-border)">
+        ${esc(desc)}
+      </p>
+    </div>
+    <button data-testid="test-todo-expand-toggle"
+            id="expand-toggle"
+            type="button"
+            aria-expanded="false"
+            aria-controls="collapsible">
+      <span class="expand-icon">▼</span>
+      <span id="expand-label">Show more</span>
+    </button>`;
+ 
+  document.getElementById('expand-toggle').addEventListener('click', toggleExpand);
+}
+ 
+function toggleExpand() {
+  const btn = document.getElementById('expand-toggle');
+  const col = document.getElementById('collapsible');
+  const lbl = document.getElementById('expand-label');
+  const pre = document.getElementById('desc-preview');
+  const expanded = btn.getAttribute('aria-expanded') === 'true';
+ 
+  btn.setAttribute('aria-expanded', String(!expanded));
+  col.classList.toggle('expanded', !expanded);
+  lbl.textContent = !expanded ? 'Show less' : 'Show more';
+  if (pre) pre.style.display = !expanded ? 'none' : '';
+}
+ 
+function esc(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+ 
+// ─── Priority ─────────────────────────────────────────────
+function applyPriority(p) {
+  card.classList.remove('priority-high','priority-medium','priority-low');
+  card.classList.add('priority-' + p.toLowerCase());
+  priorityBadge.className = 'badge priority-' + p.toLowerCase();
+  priorityBadge.textContent = p;
+  priorityBadge.setAttribute('aria-label', 'Priority: ' + p);
+}
+ 
+// ─── Status ───────────────────────────────────────────────
+function applyStatus(s) {
+  state.status = s;
+  card.classList.remove('status-done','status-overdue');
+ 
+  const map = { 'Done':'s-done','In Progress':'s-in-progress','Pending':'s-pending' };
+  statusBadge.className = map[s] || 's-pending';
+  statusBadge.textContent = s;
+  statusBadge.setAttribute('aria-label', 'Status: ' + s);
+  statusSelect.value = s;
+  checkbox.checked = (s === 'Done');
+ 
+  if (s === 'Done') {
+    card.classList.add('status-done');
+    overdueBadge.classList.remove('visible');
+    timeRemEl.textContent = 'Completed';
+    timeRemEl.className = 'tr-done';
+    return;
+  }
+  card.classList.remove('status-done');
+  updateTime();
+}
+ 
+// ─── Time remaining ───────────────────────────────────────
+function formatTime() {
+  if (state.status === 'Done') return { text: 'Completed', cls: 'tr-done', overdue: false };
+  const now = new Date();
+  const diff = state.dueDate - now;
+  const abs = Math.abs(diff);
+  const mins = Math.floor(abs / 60000);
+  const hrs  = Math.floor(abs / 3600000);
+  const days = Math.floor(abs / 86400000);
+ 
+  let text, cls, overdue = diff < 0;
+ 
+  if (overdue) {
+    if (mins < 60)  text = `Overdue by ${mins} min${mins!==1?'s':''}`;
+    else if (hrs<24) text = `Overdue by ${hrs} hour${hrs!==1?'s':''}`;
+    else             text = `Overdue by ${days} day${days!==1?'s':''}`;
+    cls = 'tr-overdue';
+  } else {
+    if (mins < 1)    text = 'Due now!';
+    else if (mins<60) text = `Due in ${mins} min${mins!==1?'s':''}`;
+    else if (hrs<24)  text = `Due in ${hrs} hour${hrs!==1?'s':''}`;
+    else if (days===1) text = 'Due tomorrow';
+    else               text = `Due in ${days} days`;
+    cls = days > 3 ? 'tr-later' : 'tr-soon';
+  }
+  return { text, cls, overdue };
+}
+ 
+function updateTime() {
+  if (state.status === 'Done') return;
+  const { text, cls, overdue } = formatTime();
+  timeRemEl.textContent = text;
+  timeRemEl.className = cls;
+  timeRemEl.setAttribute('aria-label', 'Time remaining: ' + text);
+ 
+  overdueBadge.classList.toggle('visible', overdue);
+  card.classList.toggle('status-overdue', overdue);
+}
+ 
+function formatDueDate(d) {
+  return 'Due ' + d.toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' });
+}
+ 
+// ─── Edit mode ────────────────────────────────────────────
+function openEdit() {
+  state._snap = { ...state };
+  document.getElementById('edit-title').value     = state.title;
+  document.getElementById('edit-desc').value      = state.description;
+  document.getElementById('edit-priority').value  = state.priority;
+  // format for datetime-local
+  const local = new Date(state.dueDate.getTime() - state.dueDate.getTimezoneOffset()*60000)
+    .toISOString().slice(0,16);
+  document.getElementById('edit-due').value = local;
+ 
+  viewMode.style.display = 'none';
+  editForm.classList.add('active');
+  document.getElementById('edit-title').focus();
+}
+ 
+function closeEdit(save) {
+  if (save) {
+    const newTitle = document.getElementById('edit-title').value.trim();
+    const newDesc  = document.getElementById('edit-desc').value.trim();
+    const newPri   = document.getElementById('edit-priority').value;
+    const newDue   = document.getElementById('edit-due').value;
+ 
+    if (newTitle) { state.title = newTitle; titleEl.textContent = newTitle; }
+    if (newDesc)  { state.description = newDesc; renderDesc(); }
+    state.priority = newPri;
+    applyPriority(newPri);
+    if (newDue) {
+      state.dueDate = new Date(newDue);
+      dueDateEl.textContent = formatDueDate(state.dueDate);
+      dueDateEl.setAttribute('datetime', state.dueDate.toISOString());
     }
+    updateTime();
   }
-
-  function handleCancelEdit() {
-    const titleEl = document.getElementById('todo-title');
-    const descEl = document.getElementById('todo-description');
-    const editBtn = document.getElementById('edit-btn');
-    const cancelBtn = editBtn.nextElementSibling;
-
-    // Restore original values
-    titleEl.textContent = originalTitle;
-    descEl.textContent = originalDescription;
-
-    // Exit edit mode
-    exitEditMode();
+  editForm.classList.remove('active');
+  viewMode.style.display = '';
+  editBtn.focus();
+}
+ 
+// ─── Event listeners ──────────────────────────────────────
+checkbox.addEventListener('change', () => {
+  applyStatus(checkbox.checked ? 'Done' : 'Pending');
+});
+ 
+statusSelect.addEventListener('change', () => {
+  applyStatus(statusSelect.value);
+});
+ 
+// ─── Delete ───────────────────────────────────────────────
+function deleteTodo() {
+  if (confirm('Are you sure you want to permanently delete this task?')) {
+    // Save deletion to localStorage
+    localStorage.setItem('todoDeleted', 'true');
+    // Remove card from DOM with fade-out animation
+    card.style.opacity = '0';
+    card.style.transition = 'opacity 0.3s ease';
+    setTimeout(() => {
+      card.style.display = 'none';
+      // Alert user that task was deleted
+      alert('Task deleted permanently');
+    }, 300);
   }
+}
 
-  function saveEdit() {
-    // Just exit edit mode (changes are already in the elements)
-    exitEditMode();
+// ─── Init ─────────────────────────────────────────────────
+(function init() {
+  // Check if todo was previously deleted
+  if (localStorage.getItem('todoDeleted') === 'true') {
+    card.style.display = 'none';
+    return;
   }
-
-  function exitEditMode() {
-    const titleEl = document.getElementById('todo-title');
-    const descEl = document.getElementById('todo-description');
-    const editBtn = document.getElementById('edit-btn');
-    const cancelBtn = editBtn.nextElementSibling;
-
-    isEditing = false;
-
-    titleEl.contentEditable = false;
-    descEl.contentEditable = false;
-
-    titleEl.style.border = '';
-    descEl.style.border = '';
-
-    editBtn.innerHTML = `
-      <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-        <path d="M11 2.5l2.5 2.5-8 8H3V10.5l8-8z" stroke="currentColor" stroke-width="1.25" stroke-linejoin="round"/>
-        <path d="M9.5 4l2 2" stroke="currentColor" stroke-width="1.25" stroke-linecap="round"/>
-      </svg>
-      Edit
-    `;
-    editBtn.setAttribute('aria-label', 'Edit task');
-
-    // Remove cancel button
-    if (cancelBtn && cancelBtn.textContent.includes('Cancel')) {
-      cancelBtn.remove();
-    }
-  }
-  function getTimeRemaining() {
-    const now = new Date();
-    const diffMs = DUE_DATE - now;
-    const diffMins = Math.round(diffMs / 60000);
-    const diffHours = Math.round(diffMs / 3600000);
-    const diffDays = Math.round(diffMs / 86400000);
-
-    if (diffMs <= 0) {
-      const overMins = Math.abs(diffMins);
-      if (overMins < 60) return { text: `Overdue by ${overMins} min${overMins !== 1 ? 's' : ''}`, cls: 'overdue' };
-      const overHours = Math.abs(diffHours);
-      if (overHours < 24) return { text: `Overdue by ${overHours} hour${overHours !== 1 ? 's' : ''}`, cls: 'overdue' };
-      const overDays = Math.abs(diffDays);
-      return { text: `Overdue by ${overDays} day${overDays !== 1 ? 's' : ''}`, cls: 'overdue' };
-    }
-
-    if (diffMins < 60) return { text: diffMins <= 1 ? 'Due now!' : `Due in ${diffMins} mins`, cls: 'due-soon' };
-    if (diffHours < 24) return { text: diffHours === 1 ? 'Due in 1 hour' : `Due in ${diffHours} hours`, cls: 'due-soon' };
-    if (diffDays === 1) return { text: 'Due tomorrow', cls: 'due-soon' };
-    if (diffDays <= 7) return { text: `Due in ${diffDays} days`, cls: 'due-soon' };
-    return { text: `Due in ${diffDays} days`, cls: 'due-later' };
-  }
-
-  function updateTimeRemaining() {
-    const el = document.getElementById('time-remaining');
-    const { text, cls } = getTimeRemaining();
-    el.textContent = text;
-    el.className = cls;
-    el.setAttribute('aria-label', `Time remaining: ${text}`);
-  }
-
-  function handleToggle(checkbox) {
-    const card = document.getElementById('todo-card');
-    const status = document.getElementById('status-badge');
-
-    if (checkbox.checked) {
-      card.classList.add('completed');
-      status.textContent = 'Done';
-      status.className = 'badge status-done';
-      status.setAttribute('aria-label', 'Status: Done');
-    } else {
-      card.classList.remove('completed');
-      status.textContent = 'In Progress';
-      status.className = 'badge status-in-progress';
-      status.setAttribute('aria-label', 'Status: In Progress');
-    }
-  }
-
-  updateTimeRemaining();
-  setInterval(updateTimeRemaining, 60000);
+  
+  renderDesc();
+  applyPriority(state.priority);
+  applyStatus(state.status);
+  dueDateEl.textContent = formatDueDate(state.dueDate);
+  dueDateEl.setAttribute('datetime', state.dueDate.toISOString());
+  updateTime();
+  setInterval(updateTime, 30000);
+})();
